@@ -9,8 +9,8 @@ import {
 } from "lucide-react";
 import { io, Socket } from "socket.io-client";
 
-const API    = process.env.NEXT_PUBLIC_API_URL || "https://offertabackend.onrender.com/api";
-const WS_URL = process.env.NEXT_PUBLIC_WS_URL  || "http://localhost:5000";
+const API    = "https://offertabackend.onrender.com/api";
+const WS_URL = "https://offertabackend.onrender.com";
 
 interface Participant { _id: string; name: string; logo?: string; avatar?: string; }
 interface ConvLastMsg { text?: string; image?: string; createdAt: string; }
