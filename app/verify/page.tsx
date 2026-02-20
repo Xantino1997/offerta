@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, FormEvent, useEffect } from "react";
+import { useState, FormEvent, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import "../styles/verify.css";
 
-export default function VerifyPage() {
+function VerifyPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -14,7 +14,6 @@ export default function VerifyPage() {
   const [loading, setLoading] = useState<boolean>(false);
   const [timer, setTimer] = useState<number>(60);
 
-  // Autocompletar email
   useEffect(() => {
     const emailFromUrl = searchParams.get("email");
     if (emailFromUrl) {
@@ -22,7 +21,6 @@ export default function VerifyPage() {
     }
   }, [searchParams]);
 
-  // Contador
   useEffect(() => {
     if (timer <= 0) return;
 
@@ -51,7 +49,6 @@ export default function VerifyPage() {
         setMessage(data.message ?? "Error al verificar");
       } else {
         setMessage("Cuenta verificada correctamente ✅");
-
         setTimeout(() => {
           router.push("/login");
         }, 2000);
@@ -128,5 +125,17 @@ export default function VerifyPage() {
         {message && <p className="verify-message">{message}</p>}
       </div>
     </div>
+  );
+}
+
+export default function VerifyPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100dvh" }}>
+        <span>Cargando...</span>
+      </div>
+    }>
+      <VerifyPageInner />
+    </Suspense>
   );
 }
