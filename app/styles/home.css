@@ -540,10 +540,36 @@
   100% { background-position: -200% 0; }
 }
 
+/* ── Responsive ── */
 @media (max-width: 900px) {
-  .hero-inner { grid-template-columns: 1fr; }
-  .hero-visual { display: none; }
-  .hero { padding: 3rem 1.5rem; }
+  .hero-inner {
+    grid-template-columns: 1fr;
+  }
+
+  /* En tablet/móvil: mostrar las imágenes debajo del texto */
+  .hero-visual {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+    /* Limitar altura para que no ocupe demasiado espacio */
+    max-height: 280px;
+    overflow: hidden;
+  }
+
+  /* En tablet/móvil: ocultar la primera card (la grande) para ahorrar espacio
+     y mostrar solo las 2 cards pequeñas debajo */
+  .hero-card:first-child {
+    display: none;
+  }
+
+  /* Ajustar altura de imágenes en móvil */
+  .hero-card img {
+    height: 110px;
+  }
+
+  .hero {
+    padding: 2.5rem 1.5rem 3rem;
+  }
 }
 
 @media (max-width: 600px) {
@@ -553,4 +579,54 @@
   .geo-banner { flex-direction: column; text-align: center; }
   .geo-banner-actions { margin-left: 0; }
   .banner, .geo-banner { margin: 0 1rem; }
+
+  /* En móvil pequeño: mostrar las cards en una fila horizontal scrolleable */
+  .hero-visual {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    overflow-x: auto;
+    max-height: none;
+    padding-bottom: 0.25rem;
+    /* Scroll suave */
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    /* Ocultar scrollbar pero mantener funcionalidad */
+    scrollbar-width: none;
+  }
+
+  .hero-visual::-webkit-scrollbar {
+    display: none;
+  }
+
+  .hero-card {
+    flex-shrink: 0;
+    width: 55vw;
+    max-width: 200px;
+    scroll-snap-align: start;
+  }
+
+  /* En móvil pequeño sí mostramos la primera card (vuelve a ser visible) */
+  .hero-card:first-child {
+    display: block;
+    width: 70vw;
+    max-width: 260px;
+  }
+
+  .hero-card img {
+    height: 120px;
+  }
+
+  .hero-card:first-child img {
+    height: 140px;
+  }
+
+  .hero {
+    padding: 2rem 1rem 2.5rem;
+  }
+
+  /* El grid pasa a una sola columna para que el visual quede debajo */
+  .hero-inner {
+    gap: 1.5rem;
+  }
 }
