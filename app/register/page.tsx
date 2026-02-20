@@ -144,6 +144,9 @@ export default function RegisterPage() {
         <div className="auth-header">
           <h1>Crear cuenta</h1>
           <p>Es gratis y toma menos de 1 minuto</p>
+          <Link href="/" className="flex items-center gap-1">
+  ← Volver
+</Link>
         </div>
 
         <form className="auth-form" onSubmit={handleSubmit}>
@@ -284,10 +287,8 @@ export default function RegisterPage() {
 
         <div className="auth-footer">
           ¿Ya tenés cuenta? <Link href="/login">Iniciá sesión →</Link>
-           <Link href="/">Home →</Link> Volver
         </div>
       </div>
     </div>
   );
 }
-
