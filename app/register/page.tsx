@@ -284,8 +284,10 @@ export default function RegisterPage() {
 
         <div className="auth-footer">
           ¿Ya tenés cuenta? <Link href="/login">Iniciá sesión →</Link>
+           <Link href="/">Home →</Link> Volver
         </div>
       </div>
     </div>
   );
 }
+
