@@ -11,6 +11,7 @@ import {
   MapPin, Package, Star, CheckCircle, Edit, Save, Camera,
   Plus, Pencil, Trash2, ShoppingBag, X, Tag, ArrowRight,
   LayoutList, UserPlus, MessageCircle, Heart, Users, TrendingUp,
+  Cpu, Shirt, UtensilsCrossed, Home, Dumbbell, Sparkles, PawPrint, Gamepad2,
 } from "lucide-react";
 
 import {
@@ -21,7 +22,19 @@ import ProductModal from "../componentes/ProductModal";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://offertabackend.onrender.com/api";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── Categorías del negocio ───────────────────────────────────────────────────
+const BUSINESS_CATEGORIES = [
+  { slug: "tecnologia", name: "Tecnología",  Icon: Cpu             },
+  { slug: "ropa",       name: "Ropa",        Icon: Shirt           },
+  { slug: "alimentos",  name: "Alimentos",   Icon: UtensilsCrossed },
+  { slug: "hogar",      name: "Hogar",       Icon: Home            },
+  { slug: "deportes",   name: "Deportes",    Icon: Dumbbell        },
+  { slug: "belleza",    name: "Belleza",     Icon: Sparkles        },
+  { slug: "mascotas",   name: "Mascotas",    Icon: PawPrint        },
+  { slug: "juguetes",   name: "Juguetes",    Icon: Gamepad2        },
+];
+
+// ─── Tipos ────────────────────────────────────────────────────────────────────
 interface Business {
   _id?: string;
   name: string;
@@ -35,6 +48,7 @@ interface Business {
   verified?: boolean;
   owner?: string;
   followers?: string[];
+  categories?: string[];
 }
 
 interface SocialStatus {
@@ -46,22 +60,14 @@ interface SocialStatus {
   totalRatings: number;
 }
 
-const emptyBusiness: Business = {
+const negocioVacio: Business = {
   name: "", description: "", city: "",
   logo: "/assets/offerton.jpg", rating: 0,
   totalProducts: 0, verified: false, followers: [],
+  categories: [],
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-function DiscountBadge({ discount }: { discount?: number }) {
-  if (!discount || discount === 0) return null;
-  return (
-    <span className="ng-discount-badge">
-      <Tag size={10} />-{discount}%
-    </span>
-  );
-}
-
 function ProductPrice({ price, discount }: { price: number; discount?: number }) {
   if (!discount || discount === 0)
     return <span className="ng-price">${price.toLocaleString()}</span>;
@@ -82,7 +88,93 @@ function getRankInfo(rating: number, total: number) {
   return { label: "En desarrollo", color: "#6b7280", bg: "#f3f4f6" };
 }
 
-// ─── Star Rating Widget ───────────────────────────────────────────────────────
+// ─── Selector de Categorías (máx 2) ──────────────────────────────────────────
+function CategorySelector({
+  selected,
+  onChange,
+}: {
+  selected: string[];
+  onChange: (cats: string[]) => void;
+}) {
+  const toggle = (slug: string) => {
+    if (selected.includes(slug)) {
+      onChange(selected.filter((s) => s !== slug));
+    } else if (selected.length < 2) {
+      onChange([...selected, slug]);
+    }
+  };
+
+  return (
+    <div>
+      <p style={{ margin: "0 0 0.5rem", fontSize: "0.8rem", color: "#6b7280", fontWeight: 600 }}>
+        Categorías del negocio
+        <span style={{ fontWeight: 400, marginLeft: 4 }}>
+          ({selected.length}/2 seleccionadas)
+        </span>
+      </p>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.45rem" }}>
+        {BUSINESS_CATEGORIES.map(({ slug, name, Icon }) => {
+          const active   = selected.includes(slug);
+          const disabled = !active && selected.length >= 2;
+          return (
+            <button
+              key={slug}
+              type="button"
+              onClick={() => toggle(slug)}
+              disabled={disabled}
+              style={{
+                display: "flex", alignItems: "center", gap: "0.35rem",
+                padding: "0.38rem 0.85rem", borderRadius: 20,
+                border: `1.5px solid ${active ? "#f97316" : disabled ? "#e5e7eb" : "#d1d5db"}`,
+                background: active ? "rgba(249,115,22,0.1)" : disabled ? "#f9fafb" : "#fff",
+                color: active ? "#ea580c" : disabled ? "#9ca3af" : "#374151",
+                fontSize: "0.8rem", fontWeight: active ? 700 : 500,
+                cursor: disabled ? "not-allowed" : "pointer",
+                transition: "all 0.18s",
+                opacity: disabled ? 0.5 : 1,
+              }}
+            >
+              <Icon size={13} />
+              {name}
+            </button>
+          );
+        })}
+      </div>
+      {selected.length === 2 && (
+        <p style={{ fontSize: "0.73rem", color: "#f97316", marginTop: "0.35rem", fontWeight: 600 }}>
+          Máximo 2 categorías. Deseleccioná una para cambiar.
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ─── Badges de categorías (vista) ────────────────────────────────────────────
+function CategoryBadges({ categories }: { categories?: string[] }) {
+  if (!categories || categories.length === 0) return null;
+  return (
+    <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap", marginTop: "0.25rem" }}>
+      {categories.map((slug) => {
+        const cat = BUSINESS_CATEGORIES.find((c) => c.slug === slug);
+        if (!cat) return null;
+        const { Icon, name } = cat;
+        return (
+          <span key={slug} style={{
+            display: "flex", alignItems: "center", gap: "0.3rem",
+            background: "rgba(249,115,22,0.1)", color: "#ea580c",
+            border: "1px solid rgba(249,115,22,0.25)",
+            borderRadius: 20, padding: "0.25rem 0.7rem",
+            fontSize: "0.75rem", fontWeight: 600,
+          }}>
+            <Icon size={11} />{name}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── Widget de Estrellas ──────────────────────────────────────────────────────
 function StarRating({
   current, total, myRating, onRate, readonly = false,
 }: {
@@ -95,8 +187,7 @@ function StarRating({
       <div style={{ display: "flex", gap: 2 }}>
         {[1, 2, 3, 4, 5].map((s) => (
           <Star
-            key={s}
-            size={16}
+            key={s} size={16}
             style={{ cursor: readonly ? "default" : "pointer", transition: "transform 0.1s" }}
             fill={(readonly ? current : (hovered || myRating)) >= s ? "#f97316" : "none"}
             stroke={(readonly ? current : (hovered || myRating)) >= s ? "#f97316" : "#d1d5db"}
@@ -114,12 +205,11 @@ function StarRating({
   );
 }
 
-// ─── Visitor Panel ────────────────────────────────────────────────────────────
+// ─── Panel Visitante ──────────────────────────────────────────────────────────
 function VisitorPanel({
-  business, currentUserId, social, onFollow, onLike, onContact,
+  business, social, onFollow, onLike, onContact,
 }: {
   business: Business;
-  currentUserId?: string;
   social: SocialStatus;
   onFollow: () => void;
   onLike: () => void;
@@ -174,16 +264,20 @@ function VisitorPanel({
   );
 }
 
-// ─── Main Page ────────────────────────────────────────────────────────────────
+// ─── Página Principal ─────────────────────────────────────────────────────────
 export default function NegocioPage() {
   const { user } = useAuth();
   const router   = useRouter();
   const params   = useParams();
   const bizIdParam = params?.id as string | undefined;
 
-  const [business, setBusiness]         = useState<Business>(emptyBusiness);
-  const [editing, setEditing]           = useState(false);
-  const [token, setToken]               = useState<string | null>(null);
+  const [business, setBusiness]                     = useState<Business>(negocioVacio);
+  const [editing, setEditing]                       = useState(false);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+
+  // undefined = todavía leyendo localStorage | null = sin sesión | string = con token
+  const [token, setToken] = useState<string | null | undefined>(undefined);
+
   const [loading, setLoading]           = useState(true);
   const [saving, setSaving]             = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -196,41 +290,51 @@ export default function NegocioPage() {
   const [editTarget, setEditTarget]           = useState<Product | null>(null);
   const [productSaving, setProductSaving]     = useState(false);
 
-  // Social state (visitante)
   const [social, setSocial] = useState<SocialStatus>({
     following: false, saved: false, myRating: 0,
     followersCount: 0, rating: 0, totalRatings: 0,
   });
 
-  // ── Notificaciones de chat (dueño) ──
   const [unreadChats, setUnreadChats]   = useState(0);
   const [latestConvId, setLatestConvId] = useState<string | null>(null);
 
-  // ── Token ──
-  useEffect(() => { setToken(localStorage.getItem("marketplace_token")); }, []);
+  // ── Leer token ──
+  useEffect(() => {
+    setToken(localStorage.getItem("marketplace_token"));
+  }, []);
 
   // ── Fetch negocio ──
   useEffect(() => {
-    if (!token && !bizIdParam) return;
+    if (token === undefined) return;       // todavía leyendo localStorage
+    if (!bizIdParam && !token) return;     // página propia sin sesión
+
     const fetchBusiness = async () => {
       try {
-        let res;
         if (bizIdParam) {
-          res = await fetch(`${API}/business/${bizIdParam}`);
+          const res = await fetch(`${API}/business/${bizIdParam}`);
+          if (res.ok) {
+            const data = await res.json();
+            setBusiness(data);
+            setSelectedCategories(data.categories || []);
+            const userId = (user as any)?._id || (user as any)?.id;
+            setIsOwner(data.owner === userId || data.owner?._id === userId);
+          }
         } else {
-          res = await fetch(`${API}/business/my-business`, {
+          // Página propia: siempre es el dueño si está logueado
+          setIsOwner(true);
+          const res = await fetch(`${API}/business/my-business`, {
             headers: { Authorization: `Bearer ${token}` },
           });
-        }
-        if (res.ok) {
-          const data = await res.json();
-          setBusiness(data);
-          const userId = (user as any)?._id || (user as any)?.id;
-          setIsOwner(
-            !bizIdParam ||
-            data.owner === userId ||
-            data.owner?._id === userId
-          );
+          if (res.ok) {
+            const data = await res.json();
+            setBusiness(data);
+            setSelectedCategories(data.categories || []);
+          } else if (res.status === 404) {
+            // Primera vez: abrir modo edición con formulario vacío
+            setBusiness(negocioVacio);
+            setSelectedCategories([]);
+            setEditing(true);
+          }
         }
       } catch (e) {
         console.error("Error cargando negocio:", e);
@@ -238,10 +342,11 @@ export default function NegocioPage() {
         setLoading(false);
       }
     };
+
     fetchBusiness();
   }, [token, bizIdParam, user]);
 
-  // ── Fetch social status (visitante con sesión) ──
+  // ── Fetch social ──
   useEffect(() => {
     if (!bizIdParam || !token) return;
     fetch(`${API}/business/${bizIdParam}/social`, {
@@ -252,9 +357,11 @@ export default function NegocioPage() {
       .catch(console.error);
   }, [bizIdParam, token]);
 
-  // ── Fetch products ──
+  // ── Fetch productos ──
   useEffect(() => {
-    if (!token && !bizIdParam) return;
+    if (token === undefined) return;
+    if (!bizIdParam && !token) return;
+
     const fetchProducts = async () => {
       try {
         setProductsLoading(true);
@@ -268,13 +375,13 @@ export default function NegocioPage() {
       } catch { setProducts([]); }
       finally  { setProductsLoading(false); }
     };
+
     fetchProducts();
   }, [token, bizIdParam]);
 
-  // ── Polling de chats no leídos (solo dueño, cada 15 seg) ──
+  // ── Polling chats ──
   useEffect(() => {
     if (!token || !isOwner) return;
-
     const checkChats = async () => {
       try {
         const res = await fetch(`${API}/chat/conversations`, {
@@ -287,13 +394,12 @@ export default function NegocioPage() {
         if (unread.length > 0) setLatestConvId(unread[0]._id);
       } catch {}
     };
-
     checkChats();
     const interval = setInterval(checkChats, 15000);
     return () => clearInterval(interval);
   }, [token, isOwner]);
 
-  // ── Handlers de edición ──
+  // ── Handlers ──
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -307,25 +413,38 @@ export default function NegocioPage() {
     if (!token) return;
     try {
       setSaving(true);
+      const esNuevo = !business._id;
       const fd = new FormData();
       fd.append("name", business.name);
       fd.append("description", business.description);
       fd.append("city", business.city);
+      // Categorías como JSON string para que el backend las parsee fácil
+      fd.append("categories", JSON.stringify(selectedCategories));
       if (selectedFile) fd.append("logo", selectedFile);
+
       const res  = await fetch(`${API}/business`, {
         method: "POST", headers: { Authorization: `Bearer ${token}` }, body: fd,
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Error guardando");
+
       setBusiness(data);
+      setSelectedCategories(data.categories || []);
       setEditing(false); setSelectedFile(null); setLogoPreview(null);
-      showToast("success", "¡Negocio actualizado!");
+      showToast("success", esNuevo ? "¡Negocio creado con éxito!" : "¡Negocio actualizado!");
     } catch (error: any) {
       showToast("error", error.message || "Error al guardar");
     } finally { setSaving(false); }
   };
 
-  // ── Handlers sociales ──
+  const handleCancelEdit = () => {
+    setEditing(false);
+    setSelectedFile(null);
+    setLogoPreview(null);
+    // Restaurar categorías al último estado guardado
+    setSelectedCategories(business.categories || []);
+  };
+
   const requireAuth = async () => {
     const Swal = (await import("sweetalert2")).default;
     Swal.fire({
@@ -338,27 +457,25 @@ export default function NegocioPage() {
   const handleFollow = async () => {
     if (!token) { requireAuth(); return; }
     const isFollowing = social.following;
-    const endpoint    = isFollowing ? "unfollow" : "follow";
-    const res = await fetch(`${API}/business/${bizIdParam}/${endpoint}`, {
+    const res = await fetch(`${API}/business/${bizIdParam}/${isFollowing ? "unfollow" : "follow"}`, {
       method: "POST", headers: { Authorization: `Bearer ${token}` },
     });
     if (res.ok) {
       const data = await res.json();
       setSocial(prev => ({ ...prev, following: !isFollowing, followersCount: data.followersCount }));
-      showToast("success", !isFollowing ? `✅ Siguiendo a ${business.name}` : "Dejaste de seguir");
+      showToast("success", !isFollowing ? `Siguiendo a ${business.name}` : "Dejaste de seguir");
     }
   };
 
   const handleLike = async () => {
     if (!token) { requireAuth(); return; }
-    const isSaved  = social.saved;
-    const endpoint = isSaved ? "unfavorite" : "favorite";
-    const res = await fetch(`${API}/business/${bizIdParam}/${endpoint}`, {
+    const isSaved = social.saved;
+    const res = await fetch(`${API}/business/${bizIdParam}/${isSaved ? "unfavorite" : "favorite"}`, {
       method: "POST", headers: { Authorization: `Bearer ${token}` },
     });
     if (res.ok) {
       setSocial(prev => ({ ...prev, saved: !isSaved }));
-      showToast("success", !isSaved ? "❤️ Guardado en favoritos" : "Quitado de favoritos");
+      showToast("success", !isSaved ? "Guardado en favoritos" : "Quitado de favoritos");
     }
   };
 
@@ -371,25 +488,17 @@ export default function NegocioPage() {
     });
     if (res.ok) {
       const data = await res.json();
-      setSocial(prev => ({
-        ...prev, myRating: rating,
-        rating: data.rating, totalRatings: data.totalRatings,
-      }));
-      showToast("success", `⭐ Votaste con ${rating} estrellas`);
+      setSocial(prev => ({ ...prev, myRating: rating, rating: data.rating, totalRatings: data.totalRatings }));
+      showToast("success", `Votaste con ${rating} estrellas`);
     }
   };
 
-  // ── Contactar: redirige directo al chat sin modal previo ──
   const handleContact = async () => {
     if (!token) { requireAuth(); return; }
-
     try {
       const convRes = await fetch(`${API}/chat/start`, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           participantId:
             typeof business?.owner === "object"
@@ -397,18 +506,14 @@ export default function NegocioPage() {
               : business?.owner,
         }),
       });
-
-      if (!convRes.ok) throw new Error("No se pudo crear la conversación");
-
+      if (!convRes.ok) throw new Error();
       const conv = await convRes.json();
       router.push(`/chatpage?conversationId=${conv._id}`);
-    } catch (err) {
-      console.error(err);
+    } catch {
       showToast("error", "No se pudo abrir el chat. Intentá de nuevo.");
     }
   };
 
-  // ── Products ──
   const openCreate = () => { setEditTarget(null); setModalOpen(true); };
   const openEdit   = (p: Product) => { setEditTarget(p); setModalOpen(true); };
 
@@ -453,17 +558,12 @@ export default function NegocioPage() {
   const getCategoryLabel = (value: string) =>
     CATEGORIES.find(c => c.value === value)?.label ?? value;
 
-  const currentLogo = logoPreview || business.logo || "/assets/offerton.jpg";
-
-  const followersCount = isOwner
-    ? (business.followers?.length ?? 0)
-    : social.followersCount;
-
-  const displayRating       = isOwner ? (business.rating ?? 0)       : social.rating;
-  const displayTotalRatings = isOwner ? (business.totalRatings ?? 0) : social.totalRatings;
+  const currentLogo         = logoPreview || business.logo || "/assets/offerton.jpg";
+  const followersCount      = isOwner ? (business.followers?.length ?? 0) : social.followersCount;
+  const displayRating       = isOwner ? (business.rating ?? 0)            : social.rating;
+  const displayTotalRatings = isOwner ? (business.totalRatings ?? 0)      : social.totalRatings;
   const rankInfo            = getRankInfo(displayRating, displayTotalRatings);
 
-  // ── Loading ──
   if (loading) {
     return (
       <MainLayout>
@@ -478,7 +578,7 @@ export default function NegocioPage() {
   return (
     <MainLayout>
 
-      {/* ── BANNER CHATS NO LEÍDOS (solo dueño) ── */}
+      {/* ── BANNER CHATS NO LEÍDOS ── */}
       {isOwner && unreadChats > 0 && (
         <div style={{ maxWidth: 960, margin: "1rem auto 0", padding: "0 1.5rem" }}>
           <div style={{
@@ -488,7 +588,6 @@ export default function NegocioPage() {
             padding: "0.85rem 1.25rem", gap: "0.75rem", flexWrap: "wrap",
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              {/* Burbuja con número */}
               <div style={{
                 background: "#f97316", color: "#fff", borderRadius: "50%",
                 width: 36, height: 36, display: "flex", alignItems: "center",
@@ -499,9 +598,7 @@ export default function NegocioPage() {
               </div>
               <div>
                 <p style={{ margin: 0, fontWeight: 700, color: "#9a3412", fontSize: "0.93rem" }}>
-                  💬 {unreadChats === 1
-                    ? "Tenés 1 mensaje nuevo"
-                    : `Tenés ${unreadChats} chats sin leer`}
+                  💬 {unreadChats === 1 ? "Tenés 1 mensaje nuevo" : `Tenés ${unreadChats} chats sin leer`}
                 </p>
                 <p style={{ margin: 0, color: "#c2410c", fontSize: "0.78rem" }}>
                   Clientes esperando tu respuesta
@@ -509,20 +606,13 @@ export default function NegocioPage() {
               </div>
             </div>
             <button
-              onClick={() =>
-                router.push(
-                  latestConvId
-                    ? `/chatpage?conversationId=${latestConvId}`
-                    : "/chatpage"
-                )
-              }
+              onClick={() => router.push(latestConvId ? `/chatpage?conversationId=${latestConvId}` : "/chatpage")}
               style={{
                 background: "#f97316", color: "#fff", border: "none",
                 borderRadius: 10, padding: "0.5rem 1.2rem",
                 fontWeight: 700, fontSize: "0.85rem", cursor: "pointer",
                 display: "flex", alignItems: "center", gap: 6,
-                boxShadow: "0 2px 8px rgba(249,115,22,0.35)",
-                whiteSpace: "nowrap",
+                boxShadow: "0 2px 8px rgba(249,115,22,0.35)", whiteSpace: "nowrap",
               }}
             >
               <MessageCircle size={14} /> Ver chat
@@ -548,6 +638,18 @@ export default function NegocioPage() {
 
           {/* Info */}
           <div className="negocio-info">
+
+            {/* Aviso primera vez */}
+            {isOwner && !bizIdParam && !business._id && editing && (
+              <div style={{
+                background: "#fff7ed", border: "1.5px dashed #f97316",
+                borderRadius: 12, padding: "0.75rem 1rem", marginBottom: "0.75rem",
+                color: "#9a3412", fontSize: "0.85rem", fontWeight: 600,
+              }}>
+                👋 Bienvenido. Completá los datos de tu negocio y guardá para crearlo.
+              </div>
+            )}
+
             {editing && isOwner ? (
               <div className="negocio-edit-fields">
                 <input
@@ -564,6 +666,12 @@ export default function NegocioPage() {
                   className="negocio-input" placeholder="Ciudad"
                   value={business.city}
                   onChange={e => setBusiness({ ...business, city: e.target.value })}
+                />
+
+                {/* ── Selector de categorías ── */}
+                <CategorySelector
+                  selected={selectedCategories}
+                  onChange={setSelectedCategories}
                 />
               </div>
             ) : (
@@ -584,6 +692,9 @@ export default function NegocioPage() {
                   ? <span className="negocio-badge"><CheckCircle size={13} /> Verificado</span>
                   : <span className="negocio-badge unverified">Comercio no verificado</span>
                 }
+
+                {/* Badges de categorías */}
+                <CategoryBadges categories={business.categories} />
 
                 <p className="negocio-description">
                   {business.description || "Agrega una descripción de tu negocio."}
@@ -629,14 +740,15 @@ export default function NegocioPage() {
             {isOwner ? (
               editing ? (
                 <>
-                  <button
-                    onClick={() => { setEditing(false); setSelectedFile(null); setLogoPreview(null); }}
-                    className="negocio-btn cancel" disabled={saving}
-                  >
-                    <X size={14} /> Cancelar
-                  </button>
+                  {/* Cancelar solo si el negocio ya fue creado antes */}
+                  {business._id && (
+                    <button onClick={handleCancelEdit} className="negocio-btn cancel" disabled={saving}>
+                      <X size={14} /> Cancelar
+                    </button>
+                  )}
                   <button onClick={handleSave} className="negocio-btn save" disabled={saving}>
-                    <Save size={14} /> {saving ? "Guardando..." : "Guardar"}
+                    <Save size={14} />
+                    {saving ? "Guardando..." : business._id ? "Guardar" : "Crear negocio"}
                   </button>
                 </>
               ) : (
@@ -647,7 +759,6 @@ export default function NegocioPage() {
             ) : (
               <VisitorPanel
                 business={business}
-                currentUserId={(user as any)?._id || (user as any)?.id}
                 social={social}
                 onFollow={handleFollow}
                 onLike={handleLike}
@@ -658,7 +769,7 @@ export default function NegocioPage() {
         </div>
       </div>
 
-      {/* ── PRODUCTS ── */}
+      {/* ── PRODUCTOS ── */}
       <div className="negocio-products-section">
         <div className="negocio-products-header">
           <div>
@@ -695,11 +806,7 @@ export default function NegocioPage() {
                 : "Este negocio aún no tiene productos publicados."}
             </p>
             {isOwner && (
-              <button
-                className="negocio-btn-add"
-                style={{ marginTop: "0.5rem" }}
-                onClick={openCreate}
-              >
+              <button className="negocio-btn-add" style={{ marginTop: "0.5rem" }} onClick={openCreate}>
                 <Plus size={15} /> Agregar producto
               </button>
             )}
@@ -720,16 +827,10 @@ export default function NegocioPage() {
                   }
                   {isOwner && (
                     <div className="negocio-product-actions">
-                      <button
-                        className="negocio-product-action-btn"
-                        title="Editar" onClick={() => openEdit(p)}
-                      >
+                      <button className="negocio-product-action-btn" title="Editar" onClick={() => openEdit(p)}>
                         <Pencil size={13} />
                       </button>
-                      <button
-                        className="negocio-product-action-btn danger"
-                        title="Eliminar" onClick={() => handleDeleteProduct(p)}
-                      >
+                      <button className="negocio-product-action-btn danger" title="Eliminar" onClick={() => handleDeleteProduct(p)}>
                         <Trash2 size={13} />
                       </button>
                     </div>
