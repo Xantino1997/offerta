@@ -210,7 +210,6 @@
   border-bottom: 1px solid var(--adm-border);
 }
 
-/* Tabla con scroll horizontal en mobile */
 .adm-table-wrap {
   width: 100%;
   overflow-x: auto;
@@ -253,6 +252,13 @@
 .adm-role-admin  { background: var(--adm-red-dim);    color: var(--adm-red);    border: 1px solid #ef444430; }
 .adm-role-seller { background: var(--adm-orange-dim); color: var(--adm-orange); border: 1px solid #f9731630; }
 .adm-role-user   { background: var(--adm-blue-dim);   color: var(--adm-blue);   border: 1px solid #3b82f630; }
+
+/* Ancho fijo para que todas las badges de rol queden alineadas */
+.adm-role-fixed {
+  display: inline-block;
+  width: 56px;
+  text-align: center;
+}
 
 .adm-status {
   display: inline-flex;
@@ -552,22 +558,97 @@
   cursor: pointer;
   transition: all 0.18s;
 }
-.adm-btn-confirm.gold      { background: var(--adm-gold); color: #000; }
+.adm-btn-confirm.gold       { background: var(--adm-gold); color: #000; }
 .adm-btn-confirm.gold:hover { background: #d97706; }
-.adm-btn-confirm.red       { background: var(--adm-red);  color: #fff; }
+.adm-btn-confirm.red        { background: var(--adm-red);  color: #fff; }
 .adm-btn-confirm.red:hover  { background: #dc2626; }
-.adm-btn-confirm:disabled  { opacity: 0.5; cursor: not-allowed; }
+.adm-btn-confirm.green      { background: var(--adm-green); color: #fff; }
+.adm-btn-confirm.green:hover{ background: #16a34a; }
+.adm-btn-confirm:disabled   { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Vista mobile/desktop helpers ───────── */
+.adm-desktop-only { display: block; }
+.adm-mobile-only  { display: none; }
+
+/* ── Lista mobile (usuarios y negocios) ─── */
+.adm-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.adm-list-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--adm-border);
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: background 0.12s;
+}
+.adm-list-row:last-child { border-bottom: none; }
+.adm-list-row:hover,
+.adm-list-row:active { background: var(--adm-surface2); }
+.adm-list-row.adm-row-blocked { opacity: 0.55; }
+
+.adm-list-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.adm-list-name {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--adm-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+}
+
+/* ── Detalle modal (mobile) ─────────────── */
+.adm-detail-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--adm-border);
+}
+.adm-detail-row:last-of-type { border-bottom: none; }
+.adm-detail-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--adm-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+.adm-detail-val {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--adm-text);
+  text-align: right;
+}
 
 /* ════════════════════════════════════════════
    RESPONSIVE MOBILE
 ════════════════════════════════════════════ */
 
 @media (max-width: 768px) {
-  .adm-root {
-    flex-direction: column;
-  }
+  .adm-root { flex-direction: column; }
 
-  /* ── Sidebar se convierte en barra superior ── */
+  .adm-desktop-only { display: none !important; }
+  .adm-mobile-only  { display: flex !important; }
+
+  /* ── Sidebar → barra superior ── */
   .adm-sidebar {
     width: 100%;
     height: auto;
@@ -579,7 +660,6 @@
     border-bottom: 1px solid var(--adm-border);
   }
 
-  /* Logo + footer en una fila */
   .adm-sidebar-top-row {
     display: flex;
     align-items: center;
@@ -593,7 +673,6 @@
     font-size: 0.9rem;
   }
 
-  /* Footer (usuario + logout) visible en mobile, en la misma fila que el logo */
   .adm-sidebar-footer {
     border-top: none;
     padding: 0.85rem 1rem;
@@ -603,7 +682,7 @@
   .adm-user-name { max-width: 90px; font-size: 0.78rem; }
   .adm-user-role { display: none; }
 
-  /* Nav en fila scrolleable */
+  /* Nav scrolleable horizontal */
   .adm-nav {
     flex-direction: row;
     flex-wrap: nowrap;
@@ -625,14 +704,10 @@
     font-size: 0.68rem;
     min-width: 64px;
   }
-
-  /* Mostrar etiquetas en mobile (compactas) */
   .adm-nav-item span { display: block; }
 
   /* ── Topbar ── */
-  .adm-topbar {
-    padding: 1rem 1rem 0.75rem;
-  }
+  .adm-topbar { padding: 1rem 1rem 0.75rem; }
   .adm-page-title { font-size: 1.05rem; }
   .adm-page-sub   { display: none; }
 
@@ -645,15 +720,7 @@
   .adm-stat-num   { font-size: 1.4rem; }
   .adm-stat-label { font-size: 0.7rem; }
 
-  /* ── Tables: scroll horizontal ── */
-  .adm-card { overflow: hidden; }
-
-  /* Envolver las tablas en un div con clase adm-table-wrap en el JSX */
-  .adm-table-wrap {
-    width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
+  /* ── Tables ── */
   .adm-table { min-width: 520px; font-size: 0.78rem; }
   .adm-table th, .adm-table td { padding: 0.6rem 0.75rem; }
 
@@ -679,4 +746,5 @@
   .adm-nav-item   { min-width: 54px; padding: 0.5rem; font-size: 0.62rem; }
   .adm-logo       { font-size: 0.82rem; }
   .adm-feat-options { grid-template-columns: 1fr 1fr; }
+  .adm-list-name  { max-width: 120px; }
 }
